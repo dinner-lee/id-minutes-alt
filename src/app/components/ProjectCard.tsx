@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type ProjectCardProps = {
@@ -21,7 +20,6 @@ type ProjectCardProps = {
 };
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete(e: React.MouseEvent) {
