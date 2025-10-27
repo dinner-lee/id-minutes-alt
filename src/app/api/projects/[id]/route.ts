@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 /** DELETE /api/projects/:id — delete a project */
@@ -28,6 +29,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     });
 
     console.log("Project deleted successfully:", result.id);
+    
+    // Revalidate the homepage to update the project list
+    revalidatePath("/");
+    
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     console.error("Error deleting project:", e);
