@@ -47,8 +47,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
       console.log("Delete response ok:", res.ok);
 
       const data = await res.json();
+      console.log("Delete response data:", data);
       
       if (res.ok && data.ok) {
+        console.log("Delete successful, refreshing page");
         router.refresh();
       } else {
         console.error("Delete failed:", data);
