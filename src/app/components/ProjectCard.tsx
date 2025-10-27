@@ -38,14 +38,17 @@ export function ProjectCard({ project }: ProjectCardProps) {
         method: "DELETE",
       });
 
-      if (res.ok) {
+      const data = await res.json();
+      
+      if (res.ok && data.ok) {
         router.refresh();
       } else {
-        alert("Failed to delete project");
+        console.error("Delete failed:", data);
+        alert(data.error || "Failed to delete project");
       }
     } catch (err) {
       console.error("Error deleting project:", err);
-      alert("Failed to delete project");
+      alert("Failed to delete project: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsDeleting(false);
     }
