@@ -51,7 +51,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
       
       if (res.ok && data.ok) {
         console.log("Delete successful, refreshing page");
-        router.refresh();
+        // Use window.location for full page reload to update server component
+        window.location.href = '/';
       } else {
         console.error("Delete failed:", data);
         alert(data.error || "Failed to delete project");
