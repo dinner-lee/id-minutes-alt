@@ -28,15 +28,23 @@ export function ProjectCard({ project }: ProjectCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
+    console.log("Delete button clicked for project:", project.id);
+
     if (!confirm("Are you sure you want to delete this project? This action cannot be undone. All minutes and data will be permanently deleted.")) {
+      console.log("Delete cancelled by user");
       return;
     }
+
+    console.log("Starting delete request for project:", project.id);
 
     try {
       setIsDeleting(true);
       const res = await fetch(`/api/projects/${project.id}`, {
         method: "DELETE",
       });
+
+      console.log("Delete response status:", res.status);
+      console.log("Delete response ok:", res.ok);
 
       const data = await res.json();
       
