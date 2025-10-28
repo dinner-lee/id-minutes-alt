@@ -48,7 +48,7 @@ export function MinutesList({ projectId, minutes, activeId }: Props) {
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="기록 검색"
+            placeholder="Search minutes"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 h-9 text-sm"
