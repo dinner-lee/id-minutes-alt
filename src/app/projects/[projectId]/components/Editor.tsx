@@ -193,13 +193,23 @@ export default function Editor({
         
         {/* Editor Content */}
         <div className="relative flex-1 min-h-0 overflow-x-hidden">
-          <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10 break-words overflow-x-hidden" />
-          
-          {/* Bubble Menu for selected text */}
-          {editor && <BubbleMenuComponent editor={editor} />}
-          
-          {/* Slash Command */}
-          {editor && <SlashCommand editor={editor} />}
+          <div
+            className="h-full"
+            style={{
+              paddingLeft: "max(16px, calc((100% - 873px) / 2))",
+              paddingRight: "max(16px, calc((100% - 873px) / 2))",
+              paddingTop: "24px",
+              paddingBottom: "24px",
+            }}
+          >
+            <EditorContent editor={editor} className="min-h-[50vh] break-words overflow-x-hidden" />
+            
+            {/* Bubble Menu for selected text */}
+            {editor && <BubbleMenuComponent editor={editor} />}
+            
+            {/* Slash Command */}
+            {editor && <SlashCommand editor={editor} />}
+          </div>
         </div>
         
         {/* Status */}
