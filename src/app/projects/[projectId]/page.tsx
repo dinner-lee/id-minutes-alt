@@ -81,13 +81,14 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
           <MinutesList
             projectId={projectId}
             minutes={project.minutes}
+            stages={project.stages}
             activeId={selectedMinute?.id}
           />
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto flex">
+      <main className="flex-1 min-w-0 flex h-full">
         {selectedMinute ? (
           <MinuteView
             key={selectedMinute.id} // remount per minute to isolate editor state
@@ -155,7 +156,7 @@ function MinuteView({
   const user = { name: "You" }; // replace with real session user later
 
   return (
-    <div key={minuteId} className="min-h-full flex flex-col relative">
+    <div key={minuteId} className="h-full w-full flex flex-col relative">
       <StickyHeader
         key={`hdr-${minuteId}`}
         minuteId={minuteId}
@@ -168,7 +169,7 @@ function MinuteView({
       />
 
       {/* Notion-like editor body (inline + inside Editor inserts cards) */}
-        <div className="w-full px-0 py-0 flex-1 min-h-0">
+      <div className="w-full px-0 py-0 flex-1 min-h-0">
         <Suspense fallback={<div className="text-sm text-muted-foreground">Loading editor…</div>}>
           <Editor key={`ed-${minuteId}`} minuteId={minuteId} initialHTML={initialHTML || ""} user={user} />
         </Suspense>

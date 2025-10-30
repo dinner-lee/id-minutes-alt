@@ -112,28 +112,26 @@ export function StickyHeader({
               {saving === "saving" ? <span>• saving…</span> : null}
               
               {/* Stage selector */}
-              <div className="relative stage-selector-container">
+              <div className="relative stage-selector-container inline-flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowStageDropdown(!showStageDropdown)}
                   className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs bg-white hover:bg-gray-50"
                 >
                   {stageName || "No stage"}
-                  {(() => {
-                    const currentStage = stages.find(s => s.id === selectedStageId);
-                    if (currentStage?.plannedDate) {
-                      const plannedDate = new Date(currentStage.plannedDate);
-                      const dateStr = plannedDate.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      });
-                      return <span className="text-muted-foreground ml-1">({dateStr})</span>;
-                    }
-                    return null;
-                  })()}
                   <ChevronDown className="h-3 w-3" />
                 </button>
+                {(() => {
+                  const currentStage = stages.find(s => s.id === selectedStageId);
+                  if (currentStage?.plannedDate) {
+                    const date = new Date(currentStage.plannedDate);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return <span className="text-muted-foreground text-xs">due: {year}. {month}. {day}.</span>;
+                  }
+                  return null;
+                })()}
 
                 {showStageDropdown && (
                   <div className="absolute left-0 mt-1 bg-white border rounded-lg shadow-lg z-30 min-w-[180px]">

@@ -5,6 +5,8 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { postJSON } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Home } from "lucide-react";
 
 type StageItem = { name: string; order: number; plannedDate?: string | null };
 
@@ -60,7 +62,16 @@ export default function Step3Client({
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-4">Step 3 — Timeline</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Step 3 — Timeline</h1>
+        <Link 
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Home className="h-4 w-4" />
+          Back to Dashboard
+        </Link>
+      </div>
 
       <div className="flex items-center gap-2 mb-3">
         <button onClick={addStage} className="rounded border px-3 py-1 text-sm">Add stage</button>

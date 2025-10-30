@@ -8,11 +8,12 @@ import { useRouter } from "next/navigation";
 type Props = {
   projectId: string;
   minute: { id: string; title: string; updatedAt: Date; markdown?: string | null };
+  stage?: { id: string; name: string; order: number; plannedDate?: Date | null } | null;
   href: string;
   active: boolean;
 };
 
-export function MinutesListItem({ projectId, minute, href, active }: Props) {
+export function MinutesListItem({ projectId, minute, stage, href, active }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
@@ -56,6 +57,18 @@ export function MinutesListItem({ projectId, minute, href, active }: Props) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="truncate">{minute.title || "Untitled minute"}</div>
+            {stage && (
+              <div className="text-[10px] text-blue-600 font-medium mt-0.5">
+                {stage.name}
+                {stage.plannedDate && (() => {
+                  const date = new Date(stage.plannedDate);
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, '0');
+                  const day = String(date.getDate()).padStart(2, '0');
+                  return ` · due: ${year}. ${month}. ${day}.`;
+                })()}
+              </div>
+            )}
             <div className="text-[10px] text-muted-foreground">
               Updated {new Date(minute.updatedAt).toLocaleString()}
             </div>

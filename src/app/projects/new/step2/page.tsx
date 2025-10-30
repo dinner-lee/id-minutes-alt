@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { PRESETS } from "@/lib/model-presets";
 import { postJSON } from "@/lib/api";
+import Link from "next/link";
+import { Home } from "lucide-react";
 
 function Step2Content() {
   const router = useRouter();
@@ -50,7 +52,16 @@ function Step2Content() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Step 2 — Choose model(s)</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Step 2 — Choose model(s)</h1>
+        <Link 
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Home className="h-4 w-4" />
+          Back to Dashboard
+        </Link>
+      </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <PresetBox

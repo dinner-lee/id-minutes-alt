@@ -15,10 +15,11 @@ type Props = {
     stageId: string | null;
     markdown?: string | null;
   }>;
+  stages: Array<{ id: string; name: string; order: number; plannedDate?: Date | null }>;
   activeId?: string | null;
 };
 
-export function MinutesList({ projectId, minutes, activeId }: Props) {
+export function MinutesList({ projectId, minutes, stages, activeId }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter minutes based on search query
@@ -66,11 +67,13 @@ export function MinutesList({ projectId, minutes, activeId }: Props) {
           filteredMinutes.map((m) => {
             const href = `/projects/${projectId}?minuteId=${m.id}`;
             const active = m.id === activeId;
+            const stage = m.stageId ? stages.find(s => s.id === m.stageId) : null;
             return (
               <MinutesListItem 
                 key={m.id}
                 projectId={projectId}
                 minute={m}
+                stage={stage}
                 href={href}
                 active={active}
               />

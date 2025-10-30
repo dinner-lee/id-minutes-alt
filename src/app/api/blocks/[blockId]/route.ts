@@ -87,3 +87,42 @@ export async function GET(_req: NextRequest, { params }: { params: { blockId: st
     return NextResponse.json({ ok: false, error: e?.message || "Error fetching block" }, { status: 400 });
   }
 }
+
+export async function PATCH(req: NextRequest, { params }: { params: { blockId: string } }) {
+  try {
+    const { blockId } = await params;
+    const body = await req.json();
+    
+    // Find the block with its chat
+    const block = await prisma.block.findUnique({
+      where: { id: blockId },
+      include: { chat: true },
+    });
+
+    if (!block) {
+      return NextResponse.json({ ok: false, error: "Block not found" }, { status: 404 });
+    }
+
+    // If updating flows
+    if (body.flows && block.chat) {
+      await prisma.chatThread.update({
+        where: { id: block.chat.id },
+        data: { flows: body.flows as any },
+      });
+    }
+
+    // Refetch the updated block
+    const updatedBlock = await prisma.block.findUnique({
+      where: { id: blockId },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        chat: true,
+        file: true,
+      },
+    });
+
+    return NextResponse.json({ ok: true, block: updatedBlock });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message || "Error updating block" }, { status: 400 });
+  }
+}

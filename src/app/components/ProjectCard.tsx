@@ -64,7 +64,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   }
 
   return (
-    <li className="rounded-xl border bg-white p-4 hover:shadow-sm transition">
+    <li className="group rounded-xl border bg-white p-4 hover:shadow-sm transition">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold truncate">{project.title}</h3>
@@ -77,7 +77,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="shrink-0 p-1 rounded hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50"
+            className="shrink-0 p-1 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
             aria-label="Delete project"
             title="Delete project"
           >

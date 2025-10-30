@@ -186,18 +186,18 @@ export default function Editor({
   }, [editor, insertBlockIntoEditor]);
 
   return (
-    <div className="relative w-full h-full min-h-0 overflow-x-hidden">
-      <div className="bg-white shadow-sm border rounded-none relative h-full flex flex-col overflow-x-hidden w-full">
+    <div className="relative w-full h-full min-h-0 overflow-hidden">
+      <div className="bg-white shadow-sm border rounded-none relative h-full flex flex-col overflow-hidden w-full">
         {/* Toolbar */}
         {editor && <Toolbar editor={editor} />}
         
         {/* Editor Content */}
-        <div className="relative flex-1 min-h-0 overflow-x-hidden">
+        <div className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <div
             className="h-full"
             style={{
-              paddingLeft: "max(16px, calc((100% - 873px) / 2))",
-              paddingRight: "max(16px, calc((100% - 873px) / 2))",
+              paddingLeft: "max(80px, calc((100% - 873px) / 2))",
+              paddingRight: "max(80px, calc((100% - 873px) / 2))",
               paddingTop: "24px",
               paddingBottom: "24px",
             }}
@@ -213,7 +213,7 @@ export default function Editor({
         </div>
         
         {/* Status */}
-        <div className="px-6 pb-2 text-[11px] text-muted-foreground mt-auto">
+        <div className="px-6 pb-2 text-[11px] text-muted-foreground shrink-0">
           {saving === "saving" ? "Saving…" : "Saved"}
         </div>
       </div>

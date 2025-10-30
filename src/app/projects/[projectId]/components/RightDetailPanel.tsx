@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ExternalLink, MessageSquare, X, ChevronDown, ChevronUp } from "lucide-react";
+import { ExternalLink, MessageSquare, X, ChevronDown, ChevronUp, Edit2 } from "lucide-react";
+import ChatGPTFlowReview, { ChangeSegment } from "./ChatGPTFlowReview";
 
 export default function RightDetailPanel() {
   const { selected, clear } = usePanelStore();
@@ -22,6 +23,12 @@ export default function RightDetailPanel() {
     flowIndex: -1,
     pairs: [],
   });
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    flows: any[];
+    pairs: any[];
+    blockId: string;
+  } | null>(null);
 
   useEffect(() => {
     const handleAttachmentDetail = async (event: CustomEvent) => {
@@ -65,6 +72,50 @@ export default function RightDetailPanel() {
     });
   };
 
+  const openEditModal = (flows: any[], pairs: any[], blockId: string) => {
+    setEditModal({
+      isOpen: true,
+      flows,
+      pairs,
+      blockId,
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditModal(null);
+  };
+
+  const handleEditFlowConfirm = async (opts: { title?: string; notes?: string; segments: ChangeSegment[] }) => {
+    if (!editModal) return;
+
+    try {
+      // The segments array contains all edited flows
+      const updatedFlows = opts.segments;
+
+      // Save to database
+      const res = await fetch(`/api/blocks/${editModal.blockId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flows: updatedFlows }),
+      });
+
+      if (res.ok) {
+        // Refresh the block data
+        const refreshRes = await fetch(`/api/blocks/${editModal.blockId}`);
+        const refreshData = await refreshRes.json();
+        if (refreshRes.ok && refreshData?.block) {
+          setBlockData(refreshData.block);
+        }
+        closeEditModal();
+      } else {
+        alert("Failed to update flows");
+      }
+    } catch (err) {
+      console.error("Error updating flows:", err);
+      alert("Failed to update flows");
+    }
+  };
+
   if (!displayData) {
     return (
       <div className="h-full p-4 text-sm text-muted-foreground">
@@ -83,12 +134,31 @@ export default function RightDetailPanel() {
       <div className="p-4 border-b">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-semibold truncate">{displayData.title || "Details"}</h3>
-          <Button variant="ghost" size="sm" onClick={() => {
-            clear();
-            setBlockData(null);
-          }}>
-            Close
-          </Button>
+          <div className="flex items-center gap-2">
+            {displayData.type === "CHATGPT" && displayData.chat?.flows && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  openEditModal(
+                    displayData.chat.flows,
+                    displayData.chat.raw?.pairs || [],
+                    displayData.id
+                  );
+                }}
+              >
+                <Edit2 className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => {
+              clear();
+              setBlockData(null);
+            }}>
+              <X className="h-4 w-4 mr-1" />
+              Close
+            </Button>
+          </div>
         </div>
         <div className="mt-2 flex items-center gap-2 flex-wrap">
           <Badge variant="secondary">{displayData.type}</Badge>
@@ -151,6 +221,25 @@ export default function RightDetailPanel() {
           </Button>
         )}
       </div>
+
+      {/* Edit Flow Modal */}
+      {editModal && (
+        <Dialog open={editModal.isOpen} onOpenChange={closeEditModal}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Flow</DialogTitle>
+            </DialogHeader>
+            <ChatGPTFlowReview
+              title={displayData?.title || "ChatGPT Conversation"}
+              segments={editModal.flows}
+              addedByName={displayData?.createdBy?.name || displayData?.createdBy?.email || "Unknown"}
+              pairs={editModal.pairs}
+              onCancel={closeEditModal}
+              onConfirm={handleEditFlowConfirm}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Conversation Modal */}
       <ConversationModal
