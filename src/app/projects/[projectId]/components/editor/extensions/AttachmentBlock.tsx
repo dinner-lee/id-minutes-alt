@@ -236,7 +236,19 @@ function AttachmentCardView({ node, editor, getPos }: any) {
       draggable="true"
       data-drag-handle
     >
-      <div className="group relative border rounded-lg bg-white hover:shadow-md transition-shadow">
+      <div
+        className="group relative border rounded-lg bg-white hover:shadow-md transition-shadow cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onClick={showDetail}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            showDetail();
+          }
+        }}
+        aria-label={`Open details for ${attrs.title || attrs.type}`}
+      >
         {/* Top Section */}
         <div className="p-3">
           <div className="flex items-center justify-between gap-2">
@@ -290,14 +302,14 @@ function AttachmentCardView({ node, editor, getPos }: any) {
               {/* Action buttons */}
               <div className="flex items-center gap-1">
                 <button
-                  onClick={showDetail}
+                  onClick={(e) => { e.stopPropagation(); showDetail(); }}
                   title="View details"
                   className="p-1.5 rounded hover:bg-slate-100 text-gray-600"
                 >
                   <Search className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={remove}
+                  onClick={(e) => { e.stopPropagation(); remove(); }}
                   title="Delete"
                   className="p-1.5 rounded hover:bg-slate-100 text-red-600"
                 >
