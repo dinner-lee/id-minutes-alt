@@ -60,7 +60,6 @@
     "open-graph-scraper": "^6.10.0",
     "openai": "^6.4.0",
     "postcss": "^8.5.6",
-    "puppeteer": "^24.25.0",
     "puppeteer-core": "^24.25.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -78,6 +77,7 @@
     "@eslint/eslintrc": "^3",
     "eslint": "^9",
     "eslint-config-next": "15.5.6",
-    "prisma": "^6.17.1"
+    "prisma": "^6.17.1",
+    "puppeteer": "^24.25.0"
   }
 }

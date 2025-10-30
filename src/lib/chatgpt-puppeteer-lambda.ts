@@ -45,28 +45,37 @@ export async function fetchChatGPTSharePuppeteerLambda(url: string): Promise<Sha
       ].filter(Boolean).join(':');
       
       const execPath = await chromium.default.executablePath();
+      console.log('Chromium executable path:', execPath);
       
       browser = await puppeteer.default.launch({
         args: [
           ...chromium.default.args,
           '--disable-gpu',
           '--disable-dev-shm-usage',
+          '--disable-setuid-sandbox',
           '--no-sandbox',
+          '--no-zygote',
           '--single-process',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
         ],
         executablePath: execPath,
         headless: chromium.default.headless,
         defaultViewport: chromium.default.defaultViewport,
         ignoreHTTPSErrors: true,
+        protocolTimeout: 60000,
       });
       
       console.log('Browser launched successfully');
     } else {
-      // Use local Chrome for development
+      // Use local Puppeteer (with bundled Chromium) for development
+      console.log('Using local Puppeteer with bundled Chromium for development...');
+      
+      // Import regular puppeteer (from devDependencies) which includes Chromium
       const puppeteerLocal = await import('puppeteer');
       browser = await puppeteerLocal.default.launch({
         headless: true,
-        args: ['--no-sandbox'],
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
         ignoreHTTPSErrors: true,
       });
     }
@@ -200,11 +209,23 @@ export async function fetchChatGPTSharePuppeteerLambda(url: string): Promise<Sha
 
   } catch (error: any) {
     console.error("Puppeteer Lambda parsing failed:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Environment info:", {
+      isVercel: process.env.VERCEL === '1',
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      memoryUsage: process.memoryUsage(),
+    });
     
     if (error.message?.includes('timeout')) {
-      throw new Error(`Request timeout: ChatGPT page took too long to load.`);
+      throw new Error(`Request timeout: ChatGPT page took too long to load. ${error.message}`);
+    } else if (error.message?.includes('Could not find Chrome') || error.message?.includes('Failed to launch')) {
+      throw new Error(`Browser launch failed: ${error.message}. This usually means Chromium binary is missing or memory is insufficient.`);
+    } else if (error.message?.includes('Navigation failed') || error.message?.includes('net::ERR')) {
+      throw new Error(`Network error: ${error.message}. The page might be blocking automated access.`);
     } else {
-      throw new Error(`Puppeteer Lambda parsing failed: ${error.message || 'Unknown error'}`);
+      throw new Error(`Puppeteer Lambda parsing failed: ${error.message || 'Unknown error'}. Stack: ${error.stack?.substring(0, 200)}`);
     }
   }
 }
