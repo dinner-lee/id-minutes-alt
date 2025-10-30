@@ -186,13 +186,13 @@ export default function Editor({
   }, [editor, insertBlockIntoEditor]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full min-h-0">
       <div className="bg-white shadow-sm rounded-lg border relative h-full flex flex-col">
         {/* Toolbar */}
         {editor && <Toolbar editor={editor} />}
         
         {/* Editor Content */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-h-0">
           <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10" />
           
           {/* Bubble Menu for selected text */}

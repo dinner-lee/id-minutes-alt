@@ -87,7 +87,7 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto flex">
         {selectedMinute ? (
           <MinuteView
             key={selectedMinute.id} // remount per minute to isolate editor state
@@ -168,7 +168,7 @@ function MinuteView({
       />
 
       {/* Notion-like editor body (inline + inside Editor inserts cards) */}
-      <div className="w-full px-0 py-0 flex-1">
+        <div className="w-full px-0 py-0 flex-1 min-h-0">
         <Suspense fallback={<div className="text-sm text-muted-foreground">Loading editor…</div>}>
           <Editor key={`ed-${minuteId}`} minuteId={minuteId} initialHTML={initialHTML || ""} user={user} />
         </Suspense>
