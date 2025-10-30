@@ -405,16 +405,13 @@ function ChatGPTDetails({
                   )}
                 </button>
                 
-                {/* Metadata underneath */}
-                <div className="px-3 pb-2 flex items-center gap-3 text-xs text-gray-500">
-                  {f?.addedBy && (
-                    <>
-                      {/* dot only when addedBy exists */}
-                      <span>•</span>
-                      <span>{f.addedBy}</span>
-                    </>
-                  )}
-                </div>
+                {/* Metadata underneath (render only if exists to avoid empty space) */}
+                {f?.addedBy ? (
+                  <div className="px-3 pb-2 flex items-center gap-3 text-xs text-gray-500">
+                    <span>•</span>
+                    <span>{f.addedBy}</span>
+                  </div>
+                ) : null}
                 
                 {/* Expanded content: Original conversation pairs */}
                 {isExpanded && flowPairs.length > 0 && (
