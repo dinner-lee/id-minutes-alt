@@ -60,7 +60,7 @@ export default async function ProjectWorkspacePage({ params, searchParams }: Pag
   return (
     <div className="flex h-[100dvh] overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-72 shrink-0 border-r bg-white/70 backdrop-blur flex flex-col">
+      <aside className="w-72 shrink-0 border-r bg-gray-50 flex flex-col">
         <div className="p-4 border-b shrink-0">
           {/* Back button */}
           <Link 
