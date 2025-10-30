@@ -36,9 +36,9 @@ export function Toolbar({ editor }: ToolbarProps) {
   if (!editor) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50/50 sticky top-0 z-10">
+    <div className="flex items-center gap-1 p-2 border-b bg-gray-50/50 sticky top-0 z-10 overflow-x-auto whitespace-nowrap">
       {/* Text Formatting */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-none">
         <Button
           variant={editor.isActive("bold") ? "default" : "ghost"}
           size="sm"
@@ -81,10 +81,10 @@ export function Toolbar({ editor }: ToolbarProps) {
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="h-6 flex-none" />
 
       {/* Headings */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-none">
         <Button
           variant={editor.isActive("heading", { level: 1 }) ? "default" : "ghost"}
           size="sm"
@@ -111,10 +111,10 @@ export function Toolbar({ editor }: ToolbarProps) {
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="h-6 flex-none" />
 
       {/* Lists */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-none">
         <Button
           variant={editor.isActive("bulletList") ? "default" : "ghost"}
           size="sm"
@@ -133,10 +133,10 @@ export function Toolbar({ editor }: ToolbarProps) {
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="h-6 flex-none" />
 
       {/* Block Elements */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-none">
         <Button
           variant={editor.isActive("blockquote") ? "default" : "ghost"}
           size="sm"
@@ -163,10 +163,10 @@ export function Toolbar({ editor }: ToolbarProps) {
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="h-6 flex-none" />
 
       {/* Text Alignment */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-none">
         <Button
           variant={editor.isActive({ textAlign: "left" }) ? "default" : "ghost"}
           size="sm"
