@@ -3,7 +3,7 @@
 import React from "react";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react";
-import { ExternalLink, FileText, Bot, Trash2, Search } from "lucide-react";
+import { ExternalLink, FileText, Bot, Trash2 } from "lucide-react";
 
 export type AttachmentAttrs = {
   blockId: string;
@@ -301,13 +301,6 @@ function AttachmentCardView({ node, editor, getPos }: any) {
 
               {/* Action buttons */}
               <div className="flex items-center gap-1">
-                <button
-                  onClick={(e) => { e.stopPropagation(); showDetail(); }}
-                  title="View details"
-                  className="p-1.5 rounded hover:bg-slate-100 text-gray-600"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); remove(); }}
                   title="Delete"
