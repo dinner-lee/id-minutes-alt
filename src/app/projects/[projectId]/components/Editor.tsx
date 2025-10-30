@@ -112,7 +112,7 @@ export default function Editor({
     },
     editorProps: {
       attributes: {
-        class: "prose prose-lg max-w-none outline-none focus:outline-none",
+        class: "prose prose-lg max-w-none outline-none focus:outline-none break-words",
       },
     },
   });
@@ -192,8 +192,8 @@ export default function Editor({
         {editor && <Toolbar editor={editor} />}
         
         {/* Editor Content */}
-        <div className="relative flex-1 min-h-0">
-          <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10" />
+        <div className="relative flex-1 min-h-0 overflow-x-hidden">
+          <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10 break-words" />
           
           {/* Bubble Menu for selected text */}
           {editor && <BubbleMenuComponent editor={editor} />}
