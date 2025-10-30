@@ -371,11 +371,11 @@ function ChatGPTDetails({
             const flowPairs = f?.turnPairs || [];
             
             return (
-              <div key={idx} className="border rounded-lg bg-white">
+              <div key={idx} className="border rounded-lg bg-white overflow-hidden">
                 {/* Header: Badges + Title + Chevron */}
                 <button
                   onClick={() => toggleFlow(idx)}
-                  className="w-full text-left p-3 flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  className="w-full text-left p-3 flex items-center gap-2 hover:bg-gray-50 transition-colors rounded-lg"
                 >
                   {/* Flow number badge */}
                   <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-blue-700 text-xs font-medium shrink-0">
