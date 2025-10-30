@@ -112,6 +112,13 @@ Vercel will automatically deploy your changes.
 **Cause**: Insufficient memory
 **Solution**: Increase `memory` in `vercel.json` (Pro plan allows up to 3008 MB)
 
+#### Error: "libnss3.so: cannot open shared object file" or similar library errors
+**Cause**: Incompatible `@sparticuz/chromium` version for Vercel's runtime
+**Solution**: Use `@sparticuz/chromium` v126.x or v119.x (v131+ is for AWS Lambda AL2023, not compatible with Vercel)
+```bash
+npm install @sparticuz/chromium@126.0.0
+```
+
 #### Error: "Protocol error"
 **Cause**: Chromium crashed or timed out
 **Solution**: 
@@ -253,5 +260,5 @@ If issues persist after deployment:
 **Tested With**: 
 - Next.js 15.5.6
 - puppeteer-core 24.25.0
-- @sparticuz/chromium 131.0.0
+- @sparticuz/chromium 126.0.0 (compatible with Vercel Node.js runtime)
 

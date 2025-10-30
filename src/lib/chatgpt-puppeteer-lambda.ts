@@ -36,31 +36,31 @@ export async function fetchChatGPTSharePuppeteerLambda(url: string): Promise<Sha
     let browser;
     if (isVercel) {
       console.log('Initializing Chromium for Vercel...');
+      console.log('Node version:', process.version);
+      console.log('Platform:', process.platform);
+      console.log('Architecture:', process.arch);
       
-      // Set environment for library paths
-      process.env.LD_LIBRARY_PATH = [
-        '/tmp',
-        '/tmp/lib',
-        process.env.LD_LIBRARY_PATH,
-      ].filter(Boolean).join(':');
-      
+      // Configure chromium for Vercel environment
+      // Note: @sparticuz/chromium v126 is compatible with Vercel's runtime
       const execPath = await chromium.default.executablePath();
       console.log('Chromium executable path:', execPath);
       
+      const chromiumArgs = [
+        ...chromium.default.args,
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+        '--no-zygote',
+        '--single-process',
+      ];
+      
+      console.log('Launch args:', chromiumArgs);
+      
       browser = await puppeteer.default.launch({
-        args: [
-          ...chromium.default.args,
-          '--disable-gpu',
-          '--disable-dev-shm-usage',
-          '--disable-setuid-sandbox',
-          '--no-sandbox',
-          '--no-zygote',
-          '--single-process',
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process',
-        ],
+        args: chromiumArgs,
         executablePath: execPath,
-        headless: chromium.default.headless,
+        headless: true,
         defaultViewport: chromium.default.defaultViewport,
         ignoreHTTPSErrors: true,
         protocolTimeout: 60000,
