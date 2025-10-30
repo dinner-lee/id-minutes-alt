@@ -186,8 +186,8 @@ export default function Editor({
   }, [editor, insertBlockIntoEditor]);
 
   return (
-    <div className="relative w-full h-full min-h-0">
-      <div className="bg-white shadow-sm rounded-lg relative h-full flex flex-col">
+    <div className="relative mx-auto w-full max-w-[873px] h-full">
+      <div className="bg-white shadow-sm rounded-lg border relative h-full flex flex-col">
         {/* Toolbar */}
         {editor && <Toolbar editor={editor} />}
         
