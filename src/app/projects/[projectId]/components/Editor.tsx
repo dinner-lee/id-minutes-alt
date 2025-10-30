@@ -187,7 +187,7 @@ export default function Editor({
 
   return (
     <div className="relative w-full h-full min-h-0 overflow-x-hidden">
-      <div className="bg-white shadow-sm rounded-lg border relative h-full flex flex-col overflow-x-hidden">
+      <div className="bg-white shadow-sm border rounded-none relative h-full flex flex-col overflow-x-hidden w-full">
         {/* Toolbar */}
         {editor && <Toolbar editor={editor} />}
         
