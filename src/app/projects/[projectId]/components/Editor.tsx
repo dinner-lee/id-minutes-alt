@@ -193,7 +193,7 @@ export default function Editor({
         
         {/* Editor Content */}
         <div className="relative">
-          <EditorContent editor={editor} className="min-h-[50vh] p-6 md:p-8" />
+          <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10" />
           
           {/* Bubble Menu for selected text */}
           {editor && <BubbleMenuComponent editor={editor} />}
