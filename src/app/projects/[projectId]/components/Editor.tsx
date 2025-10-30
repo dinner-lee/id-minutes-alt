@@ -186,13 +186,13 @@ export default function Editor({
   }, [editor, insertBlockIntoEditor]);
 
   return (
-    <div className="relative w-full">
-      <div className="bg-white shadow-sm rounded-lg border relative">
+    <div className="relative w-full h-full">
+      <div className="bg-white shadow-sm rounded-lg border relative h-full flex flex-col">
         {/* Toolbar */}
         {editor && <Toolbar editor={editor} />}
         
         {/* Editor Content */}
-        <div className="relative">
+        <div className="relative flex-1">
           <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10" />
           
           {/* Bubble Menu for selected text */}
@@ -203,7 +203,7 @@ export default function Editor({
         </div>
         
         {/* Status */}
-        <div className="px-6 pb-2 text-[11px] text-muted-foreground">
+        <div className="px-6 pb-2 text-[11px] text-muted-foreground mt-auto">
           {saving === "saving" ? "Saving…" : "Saved"}
         </div>
       </div>

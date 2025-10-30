@@ -168,7 +168,7 @@ function MinuteView({
       />
 
       {/* Notion-like editor body (inline + inside Editor inserts cards) */}
-      <div className="w-full px-0 py-0">
+      <div className="w-full px-0 py-0 flex-1">
         <Suspense fallback={<div className="text-sm text-muted-foreground">Loading editor…</div>}>
           <Editor key={`ed-${minuteId}`} minuteId={minuteId} initialHTML={initialHTML || ""} user={user} />
         </Suspense>
