@@ -391,7 +391,12 @@ function ChatGPTDetails({
                   <span className="text-sm font-medium text-gray-900 flex-1 truncate">
                     {f?.title || "Untitled flow"}
                   </span>
-                  
+
+                  {/* Turns count tucked near chevron */}
+                  <span className="text-xs text-gray-500 shrink-0 mr-1">
+                    {conversationTurns} turns
+                  </span>
+
                   {/* Chevron */}
                   {isExpanded ? (
                     <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
@@ -402,9 +407,9 @@ function ChatGPTDetails({
                 
                 {/* Metadata underneath */}
                 <div className="px-3 pb-2 flex items-center gap-3 text-xs text-gray-500">
-                  <span>{conversationTurns} turns</span>
                   {f?.addedBy && (
                     <>
+                      {/* dot only when addedBy exists */}
                       <span>•</span>
                       <span>{f.addedBy}</span>
                     </>
