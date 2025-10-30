@@ -112,7 +112,7 @@ export default function Editor({
     },
     editorProps: {
       attributes: {
-        class: "prose prose-lg max-w-none outline-none focus:outline-none break-words",
+        class: "prose prose-lg max-w-none outline-none focus:outline-none break-words prose-pre:whitespace-pre-wrap prose-pre:break-words",
       },
     },
   });
@@ -186,14 +186,14 @@ export default function Editor({
   }, [editor, insertBlockIntoEditor]);
 
   return (
-    <div className="relative mx-auto w-full max-w-[873px] h-full">
-      <div className="bg-white shadow-sm rounded-lg border relative h-full flex flex-col">
+    <div className="relative mx-auto w-full max-w-[873px] h-full overflow-x-hidden">
+      <div className="bg-white shadow-sm rounded-lg border relative h-full flex flex-col overflow-x-hidden">
         {/* Toolbar */}
         {editor && <Toolbar editor={editor} />}
         
         {/* Editor Content */}
         <div className="relative flex-1 min-h-0 overflow-x-hidden">
-          <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10 break-words" />
+          <EditorContent editor={editor} className="min-h-[50vh] p-8 md:p-10 break-words overflow-x-hidden" />
           
           {/* Bubble Menu for selected text */}
           {editor && <BubbleMenuComponent editor={editor} />}
