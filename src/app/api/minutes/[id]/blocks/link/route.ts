@@ -159,7 +159,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const isCgpt = isChatGPTShare(targetUrl);
 
     // Scrape Open Graph metadata (best-effort)
-    let meta: { title?: string | null; siteName?: string | null; image?: string | null } = {};
+    let meta: { title?: string | null; siteName?: string | null; image?: string | null; description?: string | null } = {};
     try {
       meta = await ogScrape(targetUrl);
     } catch {
@@ -189,6 +189,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         url: targetUrl,
         providerTag: isCgpt ? "ChatGPT" : hostname,
         thumbnailUrl: meta.image || null,
+        // Store website metadata in ChatThread for non-ChatGPT links
+        chat: !isCgpt && meta.description
+          ? {
+              create: {
+                raw: { description: meta.description, siteName: meta.siteName },
+                flows: [],
+                notes: null,
+                canonicalId: null,
+              },
+            }
+          : undefined,
       },
       select: {
         id: true,

@@ -189,7 +189,13 @@ export default function RightDetailPanel() {
 
       <div className="flex-1 overflow-y-auto p-4">
         {displayData.type === "WEBSITE" && (
-          <WebsiteDetails url={displayData.url} notes={displayData.chat?.notes} thumbnail={displayData.thumbnailUrl} />
+          <WebsiteDetails 
+            url={displayData.url} 
+            notes={displayData.chat?.notes} 
+            thumbnail={displayData.thumbnailUrl}
+            description={displayData.chat?.raw?.description}
+            siteName={displayData.chat?.raw?.siteName}
+          />
         )}
 
         {displayData.type === "FILE" && (
@@ -257,29 +263,56 @@ function WebsiteDetails({
   url,
   notes,
   thumbnail,
+  description,
+  siteName,
 }: {
   url?: string | null;
   notes?: string | null;
   thumbnail?: string | null;
+  description?: string | null;
+  siteName?: string | null;
 }) {
   return (
-    <div>
+    <div className="space-y-3">
       {thumbnail ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumbnail} alt="thumbnail" className="rounded-md border mb-3 w-full" />
+        <img src={thumbnail} alt="thumbnail" className="rounded-md border w-full" />
       ) : null}
+      
+      {siteName && (
+        <div className="text-xs text-muted-foreground font-medium">{siteName}</div>
+      )}
+      
       {url ? (
         <a
           href={url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline break-all"
         >
-          Open website <ExternalLink className="h-3 w-3" />
+          {url} <ExternalLink className="h-3 w-3 flex-shrink-0" />
         </a>
       ) : null}
-      {url && notes ? <Separator className="my-3" /> : null}
-      {notes ? <p className="text-sm text-muted-foreground whitespace-pre-wrap">{notes}</p> : null}
+      
+      {description && (
+        <>
+          <Separator />
+          <div>
+            <h4 className="text-sm font-medium mb-2">Description</h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+          </div>
+        </>
+      )}
+      
+      {notes && (
+        <>
+          <Separator />
+          <div>
+            <h4 className="text-sm font-medium mb-2">Notes</h4>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{notes}</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }

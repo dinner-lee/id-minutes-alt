@@ -85,10 +85,16 @@ export async function POST(
         url,
         thumbnailUrl: meta.ogImage,
         createdById: me.id,
-        // For WEBSITE, notes live in ChatThread? No. Keep simple: use Block.title/… and ignore notes,
-        // or add a small ChatThread with notes only. We'll store notes in chatThread to align UI:
-        chat: notes
-          ? { create: { raw: {}, flows: [], notes, canonicalId: null } }
+        // Store description and metadata in ChatThread.raw, and notes in ChatThread.notes
+        chat: (notes || meta.description)
+          ? { 
+              create: { 
+                raw: { description: meta.description, siteName: meta.siteName }, 
+                flows: [], 
+                notes, 
+                canonicalId: null 
+              } 
+            }
           : undefined,
       },
       include: { 
