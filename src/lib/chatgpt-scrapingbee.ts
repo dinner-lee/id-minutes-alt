@@ -125,32 +125,65 @@ function extractConversationFromHtml(html: string): { title: string; messages: A
       
       // Extract messages from various possible locations
       const messagesData = data?.props?.pageProps?.serverResponse?.data?.linear_conversation ||
+                          data?.props?.pageProps?.serverResponse?.data?.mapping ||
                           data?.props?.pageProps?.serverResponse?.messages ||
                           data?.props?.pageProps?.messages ||
                           data?.props?.messages ||
                           data?.messages;
       
-      if (Array.isArray(messagesData)) {
-        for (const msg of messagesData) {
+      console.log('Message data type:', messagesData ? (Array.isArray(messagesData) ? 'array' : 'object') : 'null');
+      if (messagesData) {
+        console.log('Message data keys sample:', Array.isArray(messagesData) ? `length: ${messagesData.length}` : `keys: ${Object.keys(messagesData).slice(0, 3).join(', ')}`);
+      }
+      
+      // If messagesData is an object (mapping), convert to array
+      let messageArray: any[] = [];
+      if (messagesData && typeof messagesData === 'object' && !Array.isArray(messagesData)) {
+        // It's a mapping object like { "id1": {...}, "id2": {...} }
+        messageArray = Object.values(messagesData);
+        console.log('Converted mapping to array, length:', messageArray.length);
+      } else if (Array.isArray(messagesData)) {
+        messageArray = messagesData;
+      }
+      
+      if (messageArray.length > 0) {
+        console.log(`Processing ${messageArray.length} potential messages...`);
+        let extractedCount = 0;
+        
+        for (const msg of messageArray) {
           if (msg && typeof msg === 'object') {
+            // Extract from message.message structure (common in mapping)
+            const message = msg.message || msg;
+            
             // Handle different message structures
-            const msgRole = msg.role || msg.author?.role || msg.author_role || 'assistant';
+            const msgRole = message.role || 
+                           message.author?.role || 
+                           message.author_role || 
+                           msg.role ||
+                           msg.author?.role ||
+                           'assistant';
+            
+            // Skip non-user/assistant messages
+            if (!['user', 'assistant'].includes(msgRole)) {
+              console.log(`Skipping message with role: ${msgRole}`);
+              continue;
+            }
             
             // Extract content from various structures
             let content = '';
             
-            if (typeof msg.content === 'string') {
-              content = msg.content;
-            } else if (msg.message?.content) {
-              if (typeof msg.message.content === 'string') {
-                content = msg.message.content;
-              } else if (msg.message.content.parts) {
-                content = msg.message.content.parts.join(' ');
+            if (typeof message.content === 'string') {
+              content = message.content;
+            } else if (message.content?.parts) {
+              // Handle parts array
+              if (Array.isArray(message.content.parts)) {
+                content = message.content.parts
+                  .map((part: any) => typeof part === 'string' ? part : part?.text || '')
+                  .filter(Boolean)
+                  .join(' ');
               }
-            } else if (msg.content?.parts) {
-              content = msg.content.parts.join(' ');
-            } else if (Array.isArray(msg.content)) {
-              content = msg.content
+            } else if (Array.isArray(message.content)) {
+              content = message.content
                 .map((part: any) => typeof part === 'string' ? part : part?.text || '')
                 .filter(Boolean)
                 .join(' ');
@@ -161,9 +194,14 @@ function extractConversationFromHtml(html: string): { title: string; messages: A
                 role: msgRole === 'user' ? 'user' : 'assistant',
                 content: content.trim()
               });
+              extractedCount++;
+              console.log(`Extracted message ${extractedCount}: role=${msgRole}, length=${content.trim().length}`);
+            } else {
+              console.log(`Empty content for role: ${msgRole}`);
             }
           }
         }
+        console.log(`Total messages extracted: ${extractedCount}`);
       }
     } catch (e) {
       console.log('Failed to parse __NEXT_DATA__:', e);
