@@ -32,19 +32,23 @@ export async function fetchChatGPTShareScrapingBee(url: string): Promise<SharePa
   console.log("Using ScrapingBee for ChatGPT parsing...");
 
   try {
-    // Build ScrapingBee API URL
+    // Build ScrapingBee API URL with anti-detection settings
     const params = new URLSearchParams({
       api_key: SCRAPINGBEE_KEY,
       url: url,
       render_js: 'true',
-      wait: '3000', // Wait 3 seconds for JS to load
-      premium_proxy: 'false', // Set to 'true' if regular doesn't work
+      wait: '5000', // Wait 5 seconds for JS to fully load
+      premium_proxy: 'true', // Use premium proxies to avoid detection
+      stealth_proxy: 'true', // Enable stealth mode
       country_code: 'us',
+      block_resources: 'false', // Load all resources including images
+      wait_for: '', // Wait for page to be fully loaded
     });
 
     const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?${params.toString()}`;
     
-    console.log(`Fetching via ScrapingBee: ${url}`);
+    console.log(`Fetching via ScrapingBee with premium proxies: ${url}`);
+    console.log('ScrapingBee settings: premium_proxy=true, stealth_proxy=true, wait=5000ms');
     
     const response = await fetch(scrapingBeeUrl, {
       method: 'GET',
@@ -61,6 +65,12 @@ export async function fetchChatGPTShareScrapingBee(url: string): Promise<SharePa
 
     const html = await response.text();
     console.log(`Received HTML: ${html.length} characters`);
+    
+    // Check if we got a minimal/blocked response
+    if (html.length < 50000) {
+      console.warn(`Warning: Received suspiciously small HTML (${html.length} chars) - likely blocked by ChatGPT`);
+      console.warn('HTML preview:', html.substring(0, 500));
+    }
 
     // Check remaining API credits
     const remainingCredits = response.headers.get('spb-credits-remaining');
