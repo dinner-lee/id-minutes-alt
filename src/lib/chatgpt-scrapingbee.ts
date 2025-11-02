@@ -123,85 +123,91 @@ function extractConversationFromHtml(html: string): { title: string; messages: A
               data?.props?.pageProps?.serverResponse?.data?.title ||
               data?.title || title;
       
-      // Extract messages from various possible locations
-      const messagesData = data?.props?.pageProps?.serverResponse?.data?.linear_conversation ||
-                          data?.props?.pageProps?.serverResponse?.data?.mapping ||
-                          data?.props?.pageProps?.serverResponse?.messages ||
-                          data?.props?.pageProps?.messages ||
-                          data?.props?.messages ||
-                          data?.messages;
+      // Try multiple extraction strategies
       
-      console.log('Message data type:', messagesData ? (Array.isArray(messagesData) ? 'array' : 'object') : 'null');
-      if (messagesData) {
-        console.log('Message data keys sample:', Array.isArray(messagesData) ? `length: ${messagesData.length}` : `keys: ${Object.keys(messagesData).slice(0, 3).join(', ')}`);
+      // Strategy 1: linear_conversation array
+      let linear = data?.props?.pageProps?.serverResponse?.data?.linear_conversation;
+      if (Array.isArray(linear) && linear.length > 0) {
+        console.log('Using linear_conversation strategy');
+        for (const item of linear) {
+          const message = item.message || item;
+          const role = message.author?.role || message.role || 'assistant';
+          const parts = message.content?.parts || [];
+          const content = Array.isArray(parts) ? parts.join(' ') : (message.content || '');
+          
+          if (['user', 'assistant'].includes(role) && content) {
+            messages.push({ role: role as 'user' | 'assistant', content: String(content).trim() });
+          }
+        }
       }
       
-      // If messagesData is an object (mapping), convert to array
-      let messageArray: any[] = [];
-      if (messagesData && typeof messagesData === 'object' && !Array.isArray(messagesData)) {
-        // It's a mapping object like { "id1": {...}, "id2": {...} }
-        messageArray = Object.values(messagesData);
-        console.log('Converted mapping to array, length:', messageArray.length);
-      } else if (Array.isArray(messagesData)) {
-        messageArray = messagesData;
-      }
-      
-      if (messageArray.length > 0) {
-        console.log(`Processing ${messageArray.length} potential messages...`);
-        let extractedCount = 0;
-        
-        for (const msg of messageArray) {
-          if (msg && typeof msg === 'object') {
-            // Extract from message.message structure (common in mapping)
-            const message = msg.message || msg;
+      // Strategy 2: mapping object (most common for shared chats)
+      if (messages.length === 0) {
+        const mapping = data?.props?.pageProps?.serverResponse?.data?.mapping;
+        if (mapping && typeof mapping === 'object') {
+          console.log('Using mapping strategy, keys:', Object.keys(mapping).length);
+          
+          // Build parent-child relationships
+          const nodes: any[] = Object.values(mapping);
+          const rootNode = nodes.find(n => !n.parent);
+          
+          // Traverse tree in order
+          const orderedMessages: any[] = [];
+          const traverse = (nodeId: string) => {
+            const node = mapping[nodeId];
+            if (!node) return;
             
-            // Handle different message structures
-            const msgRole = message.role || 
-                           message.author?.role || 
-                           message.author_role || 
-                           msg.role ||
-                           msg.author?.role ||
-                           'assistant';
-            
-            // Skip non-user/assistant messages
-            if (!['user', 'assistant'].includes(msgRole)) {
-              console.log(`Skipping message with role: ${msgRole}`);
-              continue;
-            }
-            
-            // Extract content from various structures
-            let content = '';
-            
-            if (typeof message.content === 'string') {
-              content = message.content;
-            } else if (message.content?.parts) {
-              // Handle parts array
-              if (Array.isArray(message.content.parts)) {
-                content = message.content.parts
-                  .map((part: any) => typeof part === 'string' ? part : part?.text || '')
-                  .filter(Boolean)
-                  .join(' ');
+            const message = node.message;
+            if (message && message.content) {
+              const role = message.author?.role || 'assistant';
+              if (['user', 'assistant'].includes(role)) {
+                const parts = message.content.parts || [];
+                const content = Array.isArray(parts) ? parts.filter((p: any) => p).join(' ') : '';
+                if (content && content.trim()) {
+                  orderedMessages.push({ role, content: content.trim(), create_time: message.create_time });
+                }
               }
-            } else if (Array.isArray(message.content)) {
-              content = message.content
-                .map((part: any) => typeof part === 'string' ? part : part?.text || '')
-                .filter(Boolean)
-                .join(' ');
             }
             
-            if (content && content.trim()) {
-              messages.push({
-                role: msgRole === 'user' ? 'user' : 'assistant',
-                content: content.trim()
-              });
-              extractedCount++;
-              console.log(`Extracted message ${extractedCount}: role=${msgRole}, length=${content.trim().length}`);
-            } else {
-              console.log(`Empty content for role: ${msgRole}`);
+            // Traverse children
+            if (node.children && Array.isArray(node.children)) {
+              for (const childId of node.children) {
+                traverse(childId);
+              }
+            }
+          };
+          
+          if (rootNode) {
+            traverse(rootNode.id);
+          }
+          
+          // Sort by create_time if available
+          orderedMessages.sort((a, b) => (a.create_time || 0) - (b.create_time || 0));
+          
+          for (const msg of orderedMessages) {
+            messages.push({
+              role: msg.role === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            });
+          }
+          
+          console.log(`Extracted ${messages.length} messages from mapping tree`);
+        }
+      }
+      
+      // Strategy 3: Simple messages array fallback
+      if (messages.length === 0) {
+        const simpleMessages = data?.props?.pageProps?.messages || data?.messages;
+        if (Array.isArray(simpleMessages)) {
+          console.log('Using simple messages array strategy');
+          for (const msg of simpleMessages) {
+            const role = msg.role || msg.author?.role || 'assistant';
+            const content = msg.content || msg.text || '';
+            if (['user', 'assistant'].includes(role) && content) {
+              messages.push({ role: role as 'user' | 'assistant', content: String(content).trim() });
             }
           }
         }
-        console.log(`Total messages extracted: ${extractedCount}`);
       }
     } catch (e) {
       console.log('Failed to parse __NEXT_DATA__:', e);
