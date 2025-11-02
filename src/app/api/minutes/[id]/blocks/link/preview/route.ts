@@ -536,25 +536,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
               }
             }
           }
-            
-          // All methods failed — instruct client to show manual paste UI.
-          return NextResponse.json(
-            { 
-              ok: false, 
-              needsManual: true, 
-              error: `All parsing methods failed. ScrapingBee: ${(scrapingBeeError as any)?.message || 'N/A'}, Puppeteer: ${(puppeteerError as any)?.message || 'Unknown error'}`,
-              suggestions: [
-                "The ChatGPT page may be using bot detection or require JavaScript",
-                "Try copying the conversation text manually",
-                "Ensure the share link is publicly accessible",
-                "Check if the link has expired or been made private",
-                "Consider using manual input for better reliability"
-              ]
-            },
-            { status: 422 }
-          );
         }
-      }
+        
+        // All methods failed — instruct client to show manual paste UI.
+        return NextResponse.json(
+          { 
+            ok: false, 
+            needsManual: true, 
+            error: `All parsing methods failed. Please use manual input.`,
+            suggestions: [
+              "The ChatGPT page may be using bot detection or require JavaScript",
+              "Try copying the conversation text manually",
+              "Ensure the share link is publicly accessible",
+              "Check if the link has expired or been made private",
+              "Consider using manual input for better reliability"
+            ]
+          },
+          { status: 422 }
+        );
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Preview failed" }, { status: 400 });
   }
