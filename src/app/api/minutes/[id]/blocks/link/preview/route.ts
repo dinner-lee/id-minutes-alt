@@ -440,10 +440,29 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         } catch (puppeteerLambdaError) {
           console.error("Puppeteer Lambda parsing failed:", puppeteerLambdaError);
           
-          // Try Puppeteer as fallback
+          // Try ScrapingBee as first fallback (works on Hobby plan)
           try {
-            console.log("Attempting Puppeteer fallback...");
-            const raw = await fetchChatGPTSharePuppeteer(url);
+            console.log("Attempting ScrapingBee parsing...");
+            const { fetchChatGPTShareScrapingBee } = await import("@/lib/chatgpt-scrapingbee");
+            const raw = await fetchChatGPTShareScrapingBee(url);
+            
+            // If we got actual conversation data, analyze it with turn-by-turn classification
+            const result = await analyzeWithTurnClassification(raw);
+            return NextResponse.json({
+              ok: true,
+              mode: "link_scrapingbee",
+              addedByName: me.name || me.email,
+              title: result.title,
+              pairs: result.pairs,
+              segments: result.segments,
+            });
+          } catch (scrapingBeeError) {
+            console.error("ScrapingBee parsing failed:", scrapingBeeError);
+            
+            // Try Puppeteer as fallback
+            try {
+              console.log("Attempting Puppeteer fallback...");
+              const raw = await fetchChatGPTSharePuppeteer(url);
             
             // Check if this is a manual input required response
             if (raw.messages.length === 1 && raw.messages[0].role === "system") {
@@ -471,69 +490,71 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
               pairs: result.pairs,
               segments: result.segments,
             });
-          } catch (puppeteerError) {
-            console.error("Puppeteer fallback also failed:", puppeteerError);
-            
-            // Try simple fetch fallback
-            try {
-              console.log("Attempting simple fetch fallback...");
-              const { fetchChatGPTShareSimple } = await import("@/lib/chatgpt-simple");
-              const raw = await fetchChatGPTShareSimple(url);
+            } catch (puppeteerError) {
+              console.error("Puppeteer fallback also failed:", puppeteerError);
               
-              if (raw.messages.length > 0) {
-                const result = await analyzeWithTurnClassification(raw);
-                return NextResponse.json({
-                  ok: true,
-                  mode: "link_simple",
-                  addedByName: me.name || me.email,
-                  title: result.title,
-                  pairs: result.pairs,
-                  segments: result.segments,
-                });
-              }
-            } catch (simpleError) {
-              console.error("Simple fetch fallback failed:", simpleError);
-              
-              // Try Cheerio as final fallback
+              // Try simple fetch fallback
               try {
-                console.log("Attempting Cheerio final fallback...");
-                const { fetchChatGPTShareCheerio } = await import("@/lib/chatgpt-ingest");
-                const raw = await fetchChatGPTShareCheerio(url);
+                console.log("Attempting simple fetch fallback...");
+                const { fetchChatGPTShareSimple } = await import("@/lib/chatgpt-simple");
+                const raw = await fetchChatGPTShareSimple(url);
                 
                 if (raw.messages.length > 0) {
                   const result = await analyzeWithTurnClassification(raw);
                   return NextResponse.json({
                     ok: true,
-                    mode: "link_cheerio",
+                    mode: "link_simple",
                     addedByName: me.name || me.email,
                     title: result.title,
                     pairs: result.pairs,
                     segments: result.segments,
                   });
                 }
-              } catch (cheerioError) {
-                console.error("Cheerio fallback also failed:", cheerioError);
+              } catch (simpleError) {
+                console.error("Simple fetch fallback failed:", simpleError);
+                
+                // Try Cheerio as final fallback
+                try {
+                  console.log("Attempting Cheerio final fallback...");
+                  const { fetchChatGPTShareCheerio } = await import("@/lib/chatgpt-ingest");
+                  const raw = await fetchChatGPTShareCheerio(url);
+                  
+                  if (raw.messages.length > 0) {
+                    const result = await analyzeWithTurnClassification(raw);
+                    return NextResponse.json({
+                      ok: true,
+                      mode: "link_cheerio",
+                      addedByName: me.name || me.email,
+                      title: result.title,
+                      pairs: result.pairs,
+                      segments: result.segments,
+                    });
+                  }
+                } catch (cheerioError) {
+                  console.error("Cheerio fallback also failed:", cheerioError);
+                }
               }
             }
-            
-            // All methods failed — instruct client to show manual paste UI.
-            return NextResponse.json(
-              { 
-                ok: false, 
-                needsManual: true, 
-                error: `All parsing methods failed. Puppeteer Lambda: ${(puppeteerLambdaError as any)?.message || 'Unknown error'}, Puppeteer: ${(puppeteerError as any)?.message || 'Unknown error'}`,
-                suggestions: [
-                  "The ChatGPT page may be using bot detection or require JavaScript",
-                  "Try copying the conversation text manually",
-                  "Ensure the share link is publicly accessible",
-                  "Check if the link has expired or been made private",
-                  "Consider using manual input for better reliability"
-                ]
-              },
-              { status: 422 }
-            );
           }
+            
+          // All methods failed — instruct client to show manual paste UI.
+          return NextResponse.json(
+            { 
+              ok: false, 
+              needsManual: true, 
+              error: `All parsing methods failed. ScrapingBee: ${(scrapingBeeError as any)?.message || 'N/A'}, Puppeteer: ${(puppeteerError as any)?.message || 'Unknown error'}`,
+              suggestions: [
+                "The ChatGPT page may be using bot detection or require JavaScript",
+                "Try copying the conversation text manually",
+                "Ensure the share link is publicly accessible",
+                "Check if the link has expired or been made private",
+                "Consider using manual input for better reliability"
+              ]
+            },
+            { status: 422 }
+          );
         }
+      }
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Preview failed" }, { status: 400 });
   }

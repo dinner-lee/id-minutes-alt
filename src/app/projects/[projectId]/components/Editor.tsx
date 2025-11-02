@@ -15,7 +15,11 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { Typography } from "@tiptap/extension-typography";
 import { Color } from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { Gapcursor } from "@tiptap/extension-gapcursor";
+import { Dropcursor } from "@tiptap/extension-dropcursor";
 import { AttachmentBlock } from "./editor/extensions/AttachmentBlock";
+// import { AttachmentGroup } from "./editor/extensions/AttachmentGroup";
+// import { AttachmentGroupingPlugin } from "./editor/extensions/AttachmentGroupingPlugin";
 import { CustomBulletList, CustomListItem } from "./editor/extensions/CustomBulletList";
 import { Button } from "@/components/ui/button";
 import EmbedModal from "../components/EmbedModal";
@@ -64,6 +68,13 @@ export default function Editor({
       // Add our custom list extensions
       CustomBulletList,
       CustomListItem,
+      // Gapcursor for better cursor positioning (helps with drag and drop)
+      Gapcursor,
+      // Dropcursor for visual feedback when dragging
+      Dropcursor.configure({
+        width: 4,
+        color: '#3b82f6',
+      }),
       Placeholder.configure({
         placeholder: "Start typing… (# for headings, / for commands, * for bullets)",
       }),
@@ -101,8 +112,11 @@ export default function Editor({
       }),
       // Typography improvements
       Typography,
-      // Our custom attachment block
+      // Our custom attachment blocks
+      // AttachmentGroup,
       AttachmentBlock,
+      // Plugin for grouping logic
+      // AttachmentGroupingPlugin,
     ],
     autofocus: true,
     content: initialHTML || "<p></p>",

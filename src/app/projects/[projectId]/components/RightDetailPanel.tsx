@@ -6,8 +6,45 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ExternalLink, MessageSquare, X, ChevronDown, ChevronUp, Edit2 } from "lucide-react";
+import { ExternalLink, MessageSquare, X, ChevronDown, ChevronUp, Edit2, Plus, Trash2, ChevronRight, ChevronLeft, Check, Calendar, User } from "lucide-react";
 import ChatGPTFlowReview, { ChangeSegment } from "./ChatGPTFlowReview";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+
+// Mock users for assignment
+const MOCK_USERS = [
+  { email: "moon05@snu.ac.kr", name: "Minsun Cho" },
+  { email: "dydgns7138@snu.ac.kr", name: "Yonghun Shin" },
+  { email: "ubfjun@snu.ac.kr", name: "Jinju Pyo" },
+  { email: "jjl0909@snu.ac.kr", name: "Jungchan Lee" },
+];
+
+type TodoItem = {
+  id: string;
+  title: string;
+  completed: boolean;
+  dueDate?: string | null;
+  assignedTo?: string | null;
+  parentId?: string | null;
+  createdAt: string;
+  createdBy?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
+  children?: TodoItem[];
+};
+
+type Note = {
+  id: string;
+  content: string;
+  createdAt: string;
+  createdBy?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
+};
 
 export default function RightDetailPanel() {
   const { selected, clear } = usePanelStore();
@@ -29,6 +66,56 @@ export default function RightDetailPanel() {
     pairs: any[];
     blockId: string;
   } | null>(null);
+
+  // New states for tabs and collapse
+  const [activeTab, setActiveTab] = useState<"todos" | "notes">("todos");
+  const [isTabsCollapsed, setIsTabsCollapsed] = useState(false); // Only for tabs view, NOT for attachment details
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [projectId, setProjectId] = useState<string | null>(null);
+
+  // Extract projectId from URL
+  useEffect(() => {
+    const pathParts = window.location.pathname.split("/");
+    const projIndex = pathParts.indexOf("projects");
+    if (projIndex !== -1 && pathParts[projIndex + 1]) {
+      setProjectId(pathParts[projIndex + 1]);
+    }
+  }, []);
+
+  // Fetch todos and notes when projectId is available
+  useEffect(() => {
+    if (projectId) {
+      fetchTodos();
+      fetchNotes();
+    }
+  }, [projectId]);
+
+  const fetchTodos = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/todos`);
+      const data = await res.json();
+      if (res.ok) {
+        setTodos(data.todos);
+      }
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+    }
+  };
+
+  const fetchNotes = async () => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/notes`);
+      const data = await res.json();
+      if (res.ok) {
+        setNotes(data.notes);
+      }
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
 
   useEffect(() => {
     const handleAttachmentDetail = async (event: CustomEvent) => {
@@ -116,14 +203,119 @@ export default function RightDetailPanel() {
     }
   };
 
-  if (!displayData) {
+  // If an attachment is selected, ALWAYS show attachment details (ignore collapse state)
+  if (displayData) {
+    return <AttachmentDetails 
+      displayData={displayData}
+      clear={clear}
+      setBlockData={setBlockData}
+      openEditModal={openEditModal}
+      openConversationModal={openConversationModal}
+      conversationModal={conversationModal}
+      closeConversationModal={closeConversationModal}
+      editModal={editModal}
+      closeEditModal={closeEditModal}
+      handleEditFlowConfirm={handleEditFlowConfirm}
+    />;
+  }
+
+  // Render collapsed state (only for tabs view)
+  if (isTabsCollapsed) {
     return (
-      <div className="h-full p-4 text-sm text-muted-foreground">
-        Select a block's "Details" to see more here.
+      <div className="fixed right-0 top-0 h-full flex items-center z-50">
+        <button
+          onClick={() => setIsTabsCollapsed(false)}
+          className="bg-white border border-r-0 rounded-l-lg p-2 shadow-lg hover:bg-gray-50 transition-colors"
+          title="Expand panel"
+        >
+          <ChevronLeft className="h-5 w-5 text-gray-600" />
+        </button>
       </div>
     );
   }
 
+  // Otherwise, show tabs
+  return (
+    <div className="h-full flex flex-col bg-white">
+      {/* Header with tabs and collapse button */}
+      <div className="p-4 border-b">
+        
+        
+          {/* Tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab("todos")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "todos"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              To-Do
+            </button>
+            <button
+              onClick={() => setActiveTab("notes")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "notes"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Notes
+            </button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsTabsCollapsed(true)}
+              title="Collapse panel"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {activeTab === "todos" ? (
+          <TodoTab 
+            todos={todos} 
+            projectId={projectId} 
+            onRefresh={fetchTodos}
+          />
+        ) : (
+          <NotesTab 
+            notes={notes} 
+            projectId={projectId} 
+            onRefresh={fetchNotes}
+          />
+        )}
+      </div>
+
+      {/* Conversation Modal */}
+      <ConversationModal
+        isOpen={conversationModal.isOpen}
+        onClose={closeConversationModal}
+        flow={conversationModal.flow}
+        flowIndex={conversationModal.flowIndex}
+        pairs={conversationModal.pairs}
+      />
+    </div>
+  );
+}
+
+// Component for attachment details view
+function AttachmentDetails({
+  displayData,
+  clear,
+  setBlockData,
+  openEditModal,
+  openConversationModal,
+  conversationModal,
+  closeConversationModal,
+  editModal,
+  closeEditModal,
+  handleEditFlowConfirm,
+}: any) {
   const createdAt =
     displayData.createdAt ? new Date(displayData.createdAt).toLocaleString() : undefined;
   const updatedAt =
@@ -255,6 +447,589 @@ export default function RightDetailPanel() {
         flowIndex={conversationModal.flowIndex}
         pairs={conversationModal.pairs}
       />
+    </div>
+  );
+}
+
+// Todo Tab Component
+function TodoTab({ todos, projectId, onRefresh }: { todos: TodoItem[]; projectId: string | null; onRefresh: () => void }) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTodo, setNewTodo] = useState({
+    title: "",
+    dueDate: "",
+    assignedTo: "",
+  });
+  const [addingParentId, setAddingParentId] = useState<string | null>(null);
+
+  const handleAddTodo = async (parentId?: string) => {
+    if (!newTodo.title.trim() || !projectId) return;
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/todos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTodo.title,
+          dueDate: newTodo.dueDate || null,
+          assignedTo: newTodo.assignedTo || null,
+          parentId: parentId || null,
+        }),
+      });
+
+      if (res.ok) {
+        setNewTodo({ title: "", dueDate: "", assignedTo: "" });
+        setShowAddForm(false);
+        setAddingParentId(null);
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error adding todo:", error);
+    }
+  };
+
+  const handleToggleTodo = async (todoId: string, completed: boolean) => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/todos/${todoId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed }),
+      });
+
+      if (res.ok) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error toggling todo:", error);
+    }
+  };
+
+  const handleUpdateTodo = async (todoId: string, updates: Partial<TodoItem>) => {
+    if (!projectId) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/todos/${todoId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (res.ok) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error updating todo:", error);
+    }
+  };
+
+  const handleDeleteTodo = async (todoId: string) => {
+    if (!projectId || !confirm("Are you sure you want to delete this task?")) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/todos/${todoId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+    }
+  };
+
+  // Filter root-level todos (no parent)
+  const rootTodos = todos.filter(t => !t.parentId);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-medium text-gray-700">Tasks</h4>
+        <Button
+          size="sm"
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center gap-1"
+        >
+          <Plus className="h-4 w-4" />
+          Add Task
+        </Button>
+      </div>
+
+      {/* Add Task Form */}
+      {showAddForm && !addingParentId && (
+        <AddTodoForm
+          newTodo={newTodo}
+          setNewTodo={setNewTodo}
+          onSubmit={() => handleAddTodo()}
+          onCancel={() => {
+            setShowAddForm(false);
+            setNewTodo({ title: "", dueDate: "", assignedTo: "" });
+          }}
+        />
+      )}
+
+      {/* Todo List */}
+      <div className="space-y-2">
+        {rootTodos.length === 0 && !showAddForm ? (
+          <p className="text-sm text-gray-500 text-center py-8">No tasks yet. Add your first task!</p>
+        ) : (
+          rootTodos.map((todo) => (
+            <TodoItemComponent
+              key={todo.id}
+              todo={todo}
+              onToggle={handleToggleTodo}
+              onUpdate={handleUpdateTodo}
+              onDelete={handleDeleteTodo}
+              onAddSubtask={(parentId) => setAddingParentId(parentId)}
+              addingParentId={addingParentId}
+              newTodo={newTodo}
+              setNewTodo={setNewTodo}
+              handleAddTodo={handleAddTodo}
+              setAddingParentId={setAddingParentId}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Todo Item Component with hierarchical support
+function TodoItemComponent({
+  todo,
+  onToggle,
+  onUpdate,
+  onDelete,
+  onAddSubtask,
+  addingParentId,
+  newTodo,
+  setNewTodo,
+  handleAddTodo,
+  setAddingParentId,
+  level = 0,
+}: {
+  todo: TodoItem;
+  onToggle: (id: string, completed: boolean) => void;
+  onUpdate: (id: string, updates: Partial<TodoItem>) => void;
+  onDelete: (id: string) => void;
+  onAddSubtask: (parentId: string) => void;
+  addingParentId: string | null;
+  newTodo: any;
+  setNewTodo: any;
+  handleAddTodo: (parentId?: string) => void;
+  setAddingParentId: (id: string | null) => void;
+  level?: number;
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState({
+    dueDate: todo.dueDate || "",
+    assignedTo: todo.assignedTo || "",
+  });
+
+  const hasChildren = todo.children && todo.children.length > 0;
+  const indentClass = level > 0 ? `ml-${level * 6}` : "";
+
+  const getUserName = (email?: string | null) => {
+    if (!email) return "Unassigned";
+    const user = MOCK_USERS.find(u => u.email === email);
+    return user?.name || email.split("@")[0];
+  };
+
+  return (
+    <div className={`${level > 0 ? 'ml-6' : ''}`}>
+      <div className="border rounded-lg p-3 bg-white hover:shadow-sm transition-shadow">
+        {/* Main todo row */}
+        <div className="flex items-start gap-2">
+          {/* Checkbox */}
+          <button
+            onClick={() => onToggle(todo.id, !todo.completed)}
+            className="mt-0.5 flex-shrink-0"
+          >
+            <div className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
+              todo.completed 
+                ? 'bg-blue-500 border-blue-500' 
+                : 'border-gray-300 hover:border-blue-400'
+            }`}>
+              {todo.completed && <Check className="h-3 w-3 text-white" />}
+            </div>
+          </button>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            {/* Title */}
+            <div className={`text-sm font-medium ${
+              todo.completed ? 'line-through text-gray-400' : 'text-gray-900'
+            }`}>
+              {todo.title}
+            </div>
+
+            {/* Metadata */}
+            <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+              {/* Due date */}
+              {(todo.dueDate || isEditing) && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editValues.dueDate}
+                      onChange={(e) => setEditValues({ ...editValues, dueDate: e.target.value })}
+                      className="border rounded px-1 py-0.5 text-xs"
+                    />
+                  ) : todo.dueDate ? (
+                    <span>{new Date(todo.dueDate).toLocaleDateString()}</span>
+                  ) : (
+                    <span className="text-gray-400">No date</span>
+                  )}
+                </div>
+              )}
+
+              {/* Assigned to */}
+              {(todo.assignedTo || isEditing) && (
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  {isEditing ? (
+                    <select
+                      value={editValues.assignedTo}
+                      onChange={(e) => setEditValues({ ...editValues, assignedTo: e.target.value })}
+                      className="border rounded px-1 py-0.5 text-xs"
+                    >
+                      <option value="">Unassigned</option>
+                      {MOCK_USERS.map(user => (
+                        <option key={user.email} value={user.email}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span>{getUserName(todo.assignedTo)}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Added date */}
+              <span className="text-gray-400">
+                Added {new Date(todo.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {isEditing ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    onUpdate(todo.id, {
+                      dueDate: editValues.dueDate || null,
+                      assignedTo: editValues.assignedTo || null,
+                    });
+                    setIsEditing(false);
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditValues({
+                      dueDate: todo.dueDate || "",
+                      assignedTo: todo.assignedTo || "",
+                    });
+                  }}
+                  className="h-7 px-2 text-xs"
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditing(true)}
+                  className="h-7 px-2"
+                  title="Edit"
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onAddSubtask(todo.id)}
+                  className="h-7 px-2"
+                  title="Add subtask"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onDelete(todo.id)}
+                  className="h-7 px-2 text-red-600 hover:text-red-700"
+                  title="Delete"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+                {hasChildren && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="h-7 px-2"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3" />
+                    )}
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Add subtask form */}
+      {addingParentId === todo.id && (
+        <div className="ml-6 mt-2">
+          <AddTodoForm
+            newTodo={newTodo}
+            setNewTodo={setNewTodo}
+            onSubmit={() => handleAddTodo(todo.id)}
+            onCancel={() => {
+              setAddingParentId(null);
+              setNewTodo({ title: "", dueDate: "", assignedTo: "" });
+            }}
+            isSubtask
+          />
+        </div>
+      )}
+
+      {/* Children */}
+      {hasChildren && isExpanded && (
+        <div className="mt-2 space-y-2">
+          {todo.children!.map((child) => (
+            <TodoItemComponent
+              key={child.id}
+              todo={child}
+              onToggle={onToggle}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onAddSubtask={onAddSubtask}
+              addingParentId={addingParentId}
+              newTodo={newTodo}
+              setNewTodo={setNewTodo}
+              handleAddTodo={handleAddTodo}
+              setAddingParentId={setAddingParentId}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Add Todo Form Component
+function AddTodoForm({ 
+  newTodo, 
+  setNewTodo, 
+  onSubmit, 
+  onCancel,
+  isSubtask = false 
+}: { 
+  newTodo: any; 
+  setNewTodo: any; 
+  onSubmit: () => void; 
+  onCancel: () => void;
+  isSubtask?: boolean;
+}) {
+  return (
+    <div className="border rounded-lg p-3 bg-gray-50 space-y-3">
+      <Input
+        placeholder={isSubtask ? "Subtask title *" : "Task title *"}
+        value={newTodo.title}
+        onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
+        className="text-sm"
+      />
+      
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs text-gray-600 mb-1 block">Due Date</label>
+          <Input
+            type="date"
+            value={newTodo.dueDate}
+            onChange={(e) => setNewTodo({ ...newTodo, dueDate: e.target.value })}
+            className="text-sm"
+          />
+        </div>
+        
+        <div>
+          <label className="text-xs text-gray-600 mb-1 block">Assign To</label>
+          <select
+            value={newTodo.assignedTo}
+            onChange={(e) => setNewTodo({ ...newTodo, assignedTo: e.target.value })}
+            className="w-full border rounded-md px-3 py-1.5 text-sm"
+          >
+            <option value="">Unassigned</option>
+            {MOCK_USERS.map(user => (
+              <option key={user.email} value={user.email}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button 
+          size="sm" 
+          onClick={onSubmit}
+          disabled={!newTodo.title.trim()}
+        >
+          Add
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Notes Tab Component
+function NotesTab({ notes, projectId, onRefresh }: { notes: Note[]; projectId: string | null; onRefresh: () => void }) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState("");
+
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim() || !projectId) return;
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: newNoteContent,
+        }),
+      });
+
+      if (res.ok) {
+        setNewNoteContent("");
+        setShowAddForm(false);
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error adding note:", error);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!projectId || !confirm("Are you sure you want to delete this note?")) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/notes/${noteId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-medium text-gray-700">Notes</h4>
+        <Button
+          size="sm"
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center gap-1"
+        >
+          <Plus className="h-4 w-4" />
+          Add Note
+        </Button>
+      </div>
+
+      {/* Add Note Form */}
+      {showAddForm && (
+        <div className="border rounded-lg p-3 bg-gray-50 space-y-3">
+          <textarea
+            placeholder="Write your note here..."
+            value={newNoteContent}
+            onChange={(e) => setNewNoteContent(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 text-sm min-h-[100px] resize-y"
+          />
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              onClick={handleAddNote}
+              disabled={!newNoteContent.trim()}
+            >
+              Add Note
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => {
+                setShowAddForm(false);
+                setNewNoteContent("");
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Notes List */}
+      <div className="space-y-3">
+        {notes.length === 0 && !showAddForm ? (
+          <p className="text-sm text-gray-500 text-center py-8">No notes yet. Add your first note!</p>
+        ) : (
+          notes.map((note) => (
+            <div key={note.id} className="border rounded-lg p-4 bg-white hover:shadow-sm transition-shadow relative group">
+              {/* Delete button */}
+              <button
+                onClick={() => handleDeleteNote(note.id)}
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded"
+                title="Delete note"
+              >
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </button>
+
+              {/* Note content */}
+              <div className="text-sm text-gray-900 whitespace-pre-wrap pr-8">
+                {note.content}
+              </div>
+
+              {/* Author and date in bottom right */}
+              <div className="mt-3 flex justify-end items-center gap-2 text-xs text-gray-500">
+                <span>
+                  {note.createdBy?.name || note.createdBy?.email?.split("@")[0] || "Unknown"}
+                </span>
+                <span>•</span>
+                <span>
+                  {new Date(note.createdAt).toLocaleDateString()} {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

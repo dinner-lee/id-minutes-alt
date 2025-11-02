@@ -3,7 +3,7 @@
 import React from "react";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { NodeViewWrapper, NodeViewContent, ReactNodeViewRenderer } from "@tiptap/react";
-import { ExternalLink, FileText, Bot, Trash2 } from "lucide-react";
+import { ExternalLink, FileText, Bot, Trash2, GripVertical } from "lucide-react";
 
 export type AttachmentAttrs = {
   blockId: string;
@@ -126,6 +126,13 @@ function AttachmentCardView({ node, editor, getPos }: any) {
   const attrs = node.attrs as AttachmentAttrs;
   const pos = getPos?.();
 
+  // Check if this block is inside a group
+  // const isInGroup = React.useMemo(() => {
+  //   if (typeof pos !== 'number') return false;
+  //   const $pos = editor.state.doc.resolve(pos);
+  //   return $pos.parent.type.name === 'attachmentGroup';
+  // }, [editor, pos]);
+  const isInGroup = false; // Grouping feature disabled
 
   // Helper functions
   const getAbbreviatedUrl = (url: string | null | undefined): string => {
@@ -229,15 +236,76 @@ function AttachmentCardView({ node, editor, getPos }: any) {
   const initials = getUserInitials(attrs.createdBy?.name, attrs.createdBy?.email);
   const colorClass = getColorForInitials(initials);
 
+  // Render compact version when in group
+  if (isInGroup && attrs.type === "CHATGPT") {
+    return (
+      <NodeViewWrapper
+        as="div"
+        className="h-full relative group/wrapper"
+        data-drag-handle
+      >
+        <div
+          className="h-full relative border rounded-lg bg-white hover:shadow-md transition-shadow cursor-pointer hover:cursor-move flex flex-col"
+          role="button"
+          tabIndex={0}
+          onClick={showDetail}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              showDetail();
+            }
+          }}
+          aria-label={`Open details for ${attrs.title || attrs.type}`}
+        >
+          <div className="p-2 flex-1 flex flex-col">
+            {/* Compact: Just type badge */}
+            <div className="flex items-center gap-1 mb-2">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-black text-white text-[10px] font-medium">
+                <Bot className="h-3 w-3" />
+                ChatGPT
+              </span>
+            </div>
+            
+            {/* Title - truncated */}
+            <div className="text-xs font-medium text-gray-900 line-clamp-2 mb-2 flex-1">
+              {attrs.title || "(untitled)"}
+            </div>
+            
+            {/* User info - compact */}
+            {attrs.createdBy && (
+              <div className="flex items-center gap-1">
+                <div className={`h-5 w-5 rounded-full ${colorClass} text-white text-[10px] grid place-items-center font-medium`}>
+                  {initials.toUpperCase()}
+                </div>
+                <span className="text-[10px] text-gray-600 truncate">
+                  {attrs.createdBy.name || attrs.createdBy.email?.split("@")[0] || "Unknown"}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  // Full version when not in group
   return (
     <NodeViewWrapper
       as="div"
-      className="my-3"
-      draggable="true"
+      className="my-3 relative group/wrapper"
       data-drag-handle
     >
+      {/* Drag Handle - positioned absolutely on the left, visible on hover */}
       <div
-        className="group relative border rounded-lg bg-white hover:shadow-md transition-shadow cursor-pointer"
+        className="absolute -left-8 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover/wrapper:opacity-100 transition-opacity z-10 pointer-events-none"
+        contentEditable={false}
+      >
+        <GripVertical className="h-5 w-5 text-gray-400" />
+      </div>
+
+      {/* Main Card - the entire card is draggable */}
+      <div
+        className="relative border rounded-lg bg-white hover:shadow-md transition-shadow cursor-pointer hover:cursor-move"
         role="button"
         tabIndex={0}
         onClick={showDetail}

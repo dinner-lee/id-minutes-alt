@@ -360,4 +360,88 @@
             @apply inline-block;
             @apply w-1;
           }
+
+  /* Drag and Drop styles for AttachmentBlock */
+  .ProseMirror-selectednode {
+    @apply outline-2 outline-blue-400 outline-offset-2;
+  }
+
+  /* Show drag indicator when dragging */
+  .ProseMirror [data-drag-handle] {
+    @apply select-none;
+  }
+
+  /* Visual feedback during drag */
+  .ProseMirror .dragging {
+    @apply opacity-50;
+  }
+
+  /* Drop target indicator */
+  .ProseMirror .drop-cursor {
+    @apply border-t-2 border-blue-500 relative;
+  }
+
+  .ProseMirror .drop-cursor::before {
+    content: '';
+    @apply absolute left-0 top-0 w-2 h-2 bg-blue-500 rounded-full -translate-y-1/2;
+  }
+
+  /* Grouping highlight - shows when dragging near another ChatGPT block */
+  [data-grouping-highlight="true"] {
+    @apply ring-2 ring-blue-400 ring-offset-2;
+    animation: pulse-blue 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-blue {
+    0%, 100% {
+      @apply ring-blue-400 ring-opacity-100;
+    }
+    50% {
+      @apply ring-blue-500 ring-opacity-75;
+    }
+  }
+
+  /* Attachment group styles */
+  .attachment-group {
+    @apply transition-all duration-200;
+  }
+
+  .attachment-group:hover {
+    @apply shadow-lg;
+  }
+
+  /* Make NodeViewContent transparent (contents utility) */
+  [data-attachment-group] [data-node-view-content] {
+    display: contents !important;
+  }
+
+  /* Ensure attachment blocks inside groups don't have vertical spacing */
+  [data-attachment-group] [data-node-view-wrapper] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+  }
+
+  /* Specific width constraints based on group size */
+  [data-child-count="2"] > div > div > [data-node-view-wrapper] {
+    flex: 1 1 50% !important;
+    max-width: calc(50% - 0.375rem) !important;
+  }
+
+  [data-child-count="3"] > div > div > [data-node-view-wrapper] {
+    flex: 1 1 33.333% !important;
+    max-width: calc(33.333% - 0.5rem) !important;
+  }
+
+  [data-child-count="4"] > div > div > [data-node-view-wrapper] {
+    flex: 1 1 25% !important;
+    max-width: calc(25% - 0.5625rem) !important;
+  }
+
+  /* Make the compact card fill its container */
+  [data-attachment-group] [data-node-view-wrapper] > div {
+    height: 100% !important;
+    width: 100% !important;
+  }
         }
